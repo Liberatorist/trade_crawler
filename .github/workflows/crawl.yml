@@ -2,7 +2,7 @@ name: Crawl Trade
 on:
   push:
     branches:
-      - main
+      - master
   schedule:
     - cron: '*/10 * * * *'
 jobs:
