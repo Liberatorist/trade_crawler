@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import re
 from time import time, sleep
 from typing import List
@@ -83,7 +84,7 @@ def wait_for_request(policies, current_states):
         request_limit, interval, _ = policy.split(':')
         current_hits = state.split(':')[0]
         if int(current_hits) >= int(request_limit) - 1:
-            sleep(int(interval))
+            sleep(int(interval) * 2)
             return
 
 
@@ -227,5 +228,7 @@ def grab_jewels():
 if __name__ == '__main__':
     t = time()
     data = grab_jewels()
-    data["pw"] = "lol"
+    data["pw"] = os.environ.get("UPLOAD_KEY")
     r = requests.post("https://militant-faith-finder.fly.dev/upload", json=data, headers=headers)
+    print(r.text)    
+    print(time()-t)

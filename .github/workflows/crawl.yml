@@ -4,7 +4,7 @@ on:
     branches:
       - master
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/20 * * * *'
 jobs:
   deploy:
     name: Crawl Trade
@@ -16,3 +16,5 @@ jobs:
           python-version: '3.10'
       - uses: actions/checkout@v3
       - run: pip install -r requirements.txt && python3 trade_crawler.py
+      env:
+        - UPLOAD_KEY: ${{ secrets.UPLOAD_KEY }}
