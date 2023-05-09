@@ -118,7 +118,7 @@ def trade_fetch(post_response):
             yield result
 
 
-def make_post_request(seed_range, mods):
+def make_post_request(min_price, mods):
     query_data = {
         'query':{
             'status':{
@@ -132,40 +132,17 @@ def make_post_request(seed_range, mods):
                         'id':  num2explicitmod[modtranslation2num[mod]]
                     } for mod in mods
                     ]
-                },
-                {
-                    'filters':[
-                    {
-                        'id':'explicit.pseudo_timeless_jewel_avarius',
-                        'value':{
-                            'min':seed_range[0],
-                            'max':seed_range[1]
-                        },
-                        'disabled':False
-                    },
-                    {
-                        'id':'explicit.pseudo_timeless_jewel_dominus',
-                        'value':{
-                            'min':seed_range[0],
-                            'max':seed_range[1]
-                        },
-                        'disabled':False
-                    },
-                    {
-                        'id':'explicit.pseudo_timeless_jewel_maxarius',
-                        'value':{
-                            'min':seed_range[0],
-                            'max':seed_range[1]
-                        },
-                        'disabled':False
-                    }
-                    ],
-                    'type':'count',
-                    'value':{
-                    'min':1
+                }
+            ],      
+            "filters": {
+                "trade_filters": {
+                    "filters": {
+                        "price": {
+                            "min": min_price
+                        }
                     }
                 }
-            ]
+            }
         },
         'sort':{
             'price':'asc'
@@ -210,18 +187,22 @@ def generate_trade_link(jewels: List[Jewel], mods):
     return  f'https://www.pathofexile.com/trade/search/{current_league}/{response.json()["id"]}'
 
 
-def crawl_trade(mods, num_splits):
+def crawl_trade(mods):
     jewels = []
-    for seed_range in [(round(2000 + k * 8000 / num_splits), round(2000 + (k+1) * 8000 / num_splits)) for k in range(0, num_splits)]:
-        post_response = make_post_request(seed_range, mods)
+    min_price = 0
+    while len(jewels) < 35:
+        post_response = make_post_request(min_price, mods)
         for result in trade_fetch(post_response):
-            jewels.append(Jewel(result))
+            jewel = Jewel(result)
+            if jewel.seed in useful_seeds:
+                jewels.append(jewel)
+        min_price = jewel.price + 1
     return generate_trade_link(sorted(jewels, key=lambda x: x.price), mods)
 
 
 def grab_jewels():
-    generic_link = crawl_trade(['1% increased effect of Non-Curse Auras per 10 Devotion'], 3)
-    mana_link = crawl_trade(['1% increased effect of Non-Curse Auras per 10 Devotion', '1% reduced Mana Cost of Skills per 10 Devotion'], 3)
+    generic_link = crawl_trade(['1% increased effect of Non-Curse Auras per 10 Devotion'])
+    mana_link = crawl_trade(['1% increased effect of Non-Curse Auras per 10 Devotion', '1% reduced Mana Cost of Skills per 10 Devotion'])
     return {'generic_link': generic_link, 'mana_link': mana_link, 'time_since_last_update': str(datetime.datetime.utcnow())}
 
 
