@@ -84,7 +84,7 @@ def wait_for_request(policies, current_states):
         request_limit, interval, _ = policy.split(':')
         current_hits = state.split(':')[0]
         if int(current_hits) >= int(request_limit) - 1:
-            sleep(int(interval) * 2)
+            sleep(int(interval))
             return
 
 
