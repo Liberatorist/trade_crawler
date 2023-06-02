@@ -4,12 +4,12 @@ on:
     branches:
       - master
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 */2 * * *'
 jobs:
   deploy:
     name: Crawl Trade
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 3
     steps:
       - name: Set up python
         uses: actions/setup-python@v2
