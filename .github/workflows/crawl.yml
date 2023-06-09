@@ -9,7 +9,7 @@ jobs:
   deploy:
     name: Crawl for Militant Faith Finder
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 1.5
     steps:
       - name: Set up python
         uses: actions/setup-python@v2
