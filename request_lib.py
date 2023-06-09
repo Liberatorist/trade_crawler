@@ -79,7 +79,6 @@ class RequestHandler:
         for idx, policy, state in zip(range(3), policies.split(','), current_states.split(',')):
             request_limit, period, _ = policy.split(':')
             current_state, _, _ = state.split(':')
-            print(f"period: {period}, limit: {request_limit}")
             limiter = RateLimiter(period=int(int(period) * 1.1), max_calls=int(request_limit))
             limiter.calls.extend(time.time() for _ in range(int(current_state))) # add previous requests to queue
             limiters[idx] = limiter
