@@ -1,21 +1,22 @@
-name: Crawl Trade
+name: Crawl for Militant Faith Finder
 on:
   push:
     branches:
       - master
   schedule:
-    - cron: '0 */2 * * *'
+    - cron: '0 */3 * * *'
 jobs:
   deploy:
-    name: Crawl Trade
+    name: Crawl for Militant Faith Finder
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
       - name: Set up python
         uses: actions/setup-python@v2
         with:
           python-version: '3.10'
       - uses: actions/checkout@v3
-      - run: pip install -r requirements.txt && python3 trade_crawler.py
+      - run: pip install -r requirements.txt
+      - run: python3 militant_faith_crawler.py
         env:
           UPLOAD_KEY: ${{ secrets.UPLOAD_KEY }}
