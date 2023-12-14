@@ -46,9 +46,9 @@ class RequestHandler:
     def set_league(self):
         response = requests.get('https://api.pathofexile.com/leagues', headers=self.headers, cookies=self.cookies)
         for league in response.json():
-            if league['rules'] == [] and 'This is the default Path of Exile league' in league['description']:
+            if league['rules'] == [] and league["category"].get("current", False):
                 return league['id']
-        return "Crucible"  # if league cant be found
+        return "Affliction"  # if league cant be found
 
     def trade_fetch(self, post_response):
         url_hash = post_response.json()['id']
@@ -60,7 +60,7 @@ class RequestHandler:
                 yield result
     
     
-    def make_request(self, url, method, data=None):
+    def make_request(self, url, method, data=None, retry=False):
         if method == 'GET':
             response = self.make_get_request(url, self.headers, self.cookies)
         elif method == 'POST':
@@ -68,8 +68,14 @@ class RequestHandler:
         else:
             return None
         if response.status_code > 399:
-            print(response.headers['X-Rate-Limit-Ip'], response.headers['X-Rate-Limit-Ip-State'])
-            raise ConnectionError(response.text)
+            if retry:
+                raise ConnectionError(response.text)
+            for state in response.headers['X-Rate-Limit-Ip-State'].split(','):
+                _, _, timeout = state.split(':')
+                if timeout != '0':
+                    print(f"Sleeping for {timeout} seconds")
+                    sleep(int(timeout) + 1)
+            response = self.make_request(url, method, data, retry=True)
         return response        
 
 
@@ -124,7 +130,7 @@ def get_price_in_chaos(result):
 
 def get_price_in_div(result):
     price_data = result['listing']['price']
-    div_price = 220
+    div_price = 110
     if price_data['currency'] == 'chaos':
         return round(price_data['amount'] / div_price, 2)
     elif price_data['currency'] == 'divine':
@@ -133,5 +139,5 @@ def get_price_in_div(result):
 
 
 def upload_data(upload_url: str, data):
-    data["pw"] = os.environ.get("UPLOAD_KEY", "")
+    data["pw"] = os.environ.get("UPLOAD_KEY", "lol")
     return requests.post(upload_url, json=data, headers=headers)
