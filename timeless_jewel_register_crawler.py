@@ -5,8 +5,8 @@ import sqlite3 as sl
 from typing import List
 from request_lib import RequestHandler, get_price_in_div, upload_data
 
-num2type = ["Brutal Restraint","Glorious Vanity","Elegant Hubris"]
-type2num = {k:v for v, k in enumerate(num2type)}
+num2type = ["Brutal Restraint", "Glorious Vanity", "Elegant Hubris"]
+type2num = {k: v for v, k in enumerate(num2type)}
 
 
 def connect_to_db():
@@ -24,7 +24,8 @@ def get_jewels():
 def get_impossible_escapes():
     con = connect_to_db()
     with con:
-        response = con.execute("SELECT * FROM IMPOSSIBLE_ESCAPES ORDER BY price")
+        response = con.execute(
+            "SELECT * FROM IMPOSSIBLE_ESCAPES ORDER BY price")
     for r in response:
         yield ImpossibleEscape(*r)
 
@@ -36,15 +37,20 @@ class Jewel:
     def __init__(self, seed, type, last_seen, price):
         self.seed = seed
         self.type = num2type[type]
-        self.last_seen = datetime.strptime(last_seen, '%Y-%m-%d %H:%M') if last_seen else None
-        self.price = float(price) if (price is not None and price != "None") else None
+        self.last_seen = datetime.strptime(
+            last_seen, '%Y-%m-%d %H:%M') if last_seen else None
+        self.price = float(price) if (
+            price is not None and price != "None") else None
+
 
 class ImpossibleEscape:
     def __init__(self, keystone, name, last_seen, price):
         self.keystone = keystone
         self.name = name
-        self.last_seen = datetime.strptime(last_seen, '%Y-%m-%d %H:%M') if last_seen else None
-        self.price = float(price) if (price is not None and price != "None") else None
+        self.last_seen = datetime.strptime(
+            last_seen, '%Y-%m-%d %H:%M') if last_seen else None
+        self.price = float(price) if (
+            price is not None and price != "None") else None
 
 
 versions = {
@@ -57,30 +63,30 @@ versions = {
 def trade_for_impossible_escapes(impossible_escapes: List[ImpossibleEscape]):
     url = f"https://www.pathofexile.com/api/trade/search/{r.current_league}"
     query_data = {
-        "query":{
-            "status":{
-                "option":"onlineleague"
+        "query": {
+            "status": {
+                "option": "onlineleague"
             },
-            "stats":[
+            "stats": [
                 {
-                    "type":"count",
-                    "filters":[
-                    {
-                        "id":"explicit.stat_2422708892",
-                        "value":{
-                            "option":ie.keystone
-                        },
-                        "disabled":False
-                    } for ie in impossible_escapes
+                    "type": "count",
+                    "filters": [
+                        {
+                            "id": "explicit.stat_2422708892",
+                            "value": {
+                                "option": ie.keystone
+                            },
+                            "disabled": False
+                        } for ie in impossible_escapes
                     ],
-                    "value":{
-                    "min":1
+                    "value": {
+                        "min": 1
                     }
                 }
             ]
         },
-        "sort":{
-            "price":"asc"
+        "sort": {
+            "price": "asc"
         }
     }
     return r.make_request(url, "POST", query_data)
@@ -129,7 +135,7 @@ def update_all_jewels():
     k = 12
     for jewels_subset in [jewels[n: n + k] for n in range(0, len(jewels), k)]:
         seen_already = set()
-        post_response = trade_for_jewels(jewels_subset)#
+        post_response = trade_for_jewels(jewels_subset)
         for result in r.trade_fetch(post_response):
             seed = re.findall('\d+', result["item"]["explicitMods"][0])[0]
             jewel_type = type2num[result["item"]["name"]]
@@ -137,15 +143,16 @@ def update_all_jewels():
             if (seed, jewel_type) in seen_already:
                 continue
             else:
-                price = get_price_in_div    (result)
+                price = get_price_in_div(result)
                 if price is None:
                     continue
                 prices.append([price, seed, jewel_type])
-                seen_already.add((seed, jewel_type))       
+                seen_already.add((seed, jewel_type))
             if len(seen_already) == len(jewels_subset):
                 break
 
-    print(f"Finished jewel updates at {datetime.utcnow()} after {(datetime.utcnow() - start_time).seconds}s")
+    print(
+        f"Finished jewel updates at {datetime.utcnow()} after {(datetime.utcnow() - start_time).seconds}s")
     return prices
 
 
@@ -159,7 +166,8 @@ def update_all_impossible_escapes():
         post_response = trade_for_impossible_escapes(impossible_escapes_subset)
         seen_already = set()
         for result in r.trade_fetch(post_response):
-            keystone = re.findall('Passives in Radius of (.*) can be Allocated', result["item"]["explicitMods"][0])[0]
+            keystone = re.findall(
+                'Passives in Radius of (.*) can be Allocated', result["item"]["explicitMods"][0])[0]
             if keystone in seen_already:
                 continue
             else:
@@ -170,8 +178,10 @@ def update_all_impossible_escapes():
                 seen_already.add(keystone)
             if len(seen_already) == len(impossible_escapes_subset):
                 break
-    print(f"Finished IE updates at {datetime.utcnow()} after {(datetime.utcnow() - start_time).seconds}s")
+    print(
+        f"Finished IE updates at {datetime.utcnow()} after {(datetime.utcnow() - start_time).seconds}s")
     return prices
+
 
 def update_all():
     prices = dict()
@@ -183,4 +193,3 @@ def update_all():
 
 if __name__ == '__main__':
     update_all()
- 
